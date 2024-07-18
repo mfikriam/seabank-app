@@ -1,0 +1,99 @@
+extends base
+
+block main
+  .row.d-flex.justify-content-center
+    .col-lg-10
+      .d-flex.justify-content-between.align-items-center
+        h2 Data Distribusi Kata
+        button.btn.btn-primary.m-2(type='button' data-bs-toggle='modal' data-bs-target='#modal-add-distribusi') Tambah
+    .col-lg-10
+      // Table Distribusi
+      .table-responsive
+        table#distribusi-table.table.table-striped.table
+          thead
+            tr
+              th.text-center No
+              th.text-center Kata
+              th.text-center Negatif
+              th.text-center Positif
+              th.text-center Aksi
+          tbody
+            each distribusi, index in distribusiObjArr
+              tr
+                td.text-center= index + 1
+                td= distribusi.kata
+                td.text-center= distribusi.negatif
+                td.text-center= distribusi.positif
+                td.text-center
+                  button.btn.btn-sm.btn-success.m-1(type='button' data-bs-toggle='modal' data-bs-target=`#modal-update-distribusi-${distribusi.id}`)
+                    i.bi.bi-pencil-square
+                  button.btn.btn-sm.btn-danger.btn--trash-user.m-1(type='button' data-bs-toggle='modal' data-bs-target=`#modal-delete-distribusi-${distribusi.id}`)
+                    i.bi.bi-trash
+      // End Table Distribusi
+
+  // Add Distribusi Modal
+  #modal-add-distribusi.modal.fade(data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-hidden='true')
+    .modal-dialog.modal-dialog-scrollable
+      .modal-content
+        .modal-header
+          h1.modal-title.fs-4 Tambah Data Distribusi
+          button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+        .modal-body
+          form#form-add-distribusi.row(novalidate)
+            .col-12.mb-3
+              label.form-label(for='add-kata') Kata
+              input#add-kata.form-control(type='text' name='kata' required)
+              .invalid-feedback Masukkan kata
+            .col-12.mb-3
+              label.form-label(for='add-negatif') Weigth Kelas Negatif
+              input#add-negatif.form-control(type='number' name='negatif' min='0' step='0.001' required)
+              .invalid-feedback Masukkan weight negatif
+            .col-12.mb-3
+              label.form-label(for='add-positif') Weigth Kelas Positif
+              input#add-positif.form-control(type='number' name='positif' min='0' step='0.001' required)
+              .invalid-feedback Masukkan weight positif
+        .modal-footer
+          button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+          button#btn-submit-distribusi.btn.btn-primary(type='submit' form='form-add-distribusi') Submit
+  // End Add Distribusi Modal
+
+  each distribusi in distribusiObjArr
+    // Update Distribusi Modals
+    .modal.fade(id=`modal-update-distribusi-${distribusi.id}` data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-hidden='true')
+      .modal-dialog.modal-dialog-scrollable
+        .modal-content
+          .modal-header
+            h1.modal-title.fs-4 Update Data Distribusi
+            button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+          .modal-body
+            form.row(id=`form-update-distribusi-${distribusi.id}` novalidate data-obj-id=distribusi.id)
+              .col-12.mb-3
+                label.form-label(for='update-kata') Kata
+                input#update-kata.form-control(type='text' name='kata' value=distribusi.kata required)
+                .invalid-feedback Masukkan kata
+              .col-12.mb-3
+                label.form-label(for='update-negatif') Weigth Kelas Negatif
+                input#update-negatif.form-control(type='number' name='negatif' min='0' step='0.001' value=distribusi.negatif required)
+                .invalid-feedback Masukkan weight negatif
+              .col-12.mb-3
+                label.form-label(for='update-positif') Weigth Kelas Positif
+                input#update-positif.form-control(type='number' name='positif' min='0' step='0.001' value=distribusi.positif required)
+                .invalid-feedback Masukkan weight positif
+          .modal-footer
+            button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+            button.btn.btn-info(class=`btn-update-distribusi` type='submit' form=`form-update-distribusi-${distribusi.id}`) Update
+    //End Update Distribusi Modals
+
+    // Delete Distribusi Modals
+    .modal.fade(id=`modal-delete-distribusi-${distribusi.id}` data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-hidden='true')
+      .modal-dialog.modal-dialog-centered
+        .modal-content
+          .modal-header
+            h1.modal-title.fs-4 Konfirmasi Hapus
+            button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+          .modal-body Anda yakin ingin menghapus distribusi kata: 
+            span.fw-bold= distribusi.kata
+          .modal-footer
+            button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+            button.btn.btn-danger(class='btn-delete-distribusi' type='button' data-obj-id=distribusi.id) Delete
+    //End Delete Distribusi Modals
