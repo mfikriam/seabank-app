@@ -4,7 +4,7 @@ import { DataTable } from 'simple-datatables';
 
 import { showAlert } from './alert';
 import { addNewData, updateDataById, delDataById } from './manage-data';
-import { classification } from './svm';
+import { classification } from './naive-bayes';
 
 //? DOM Element - Halaman Distribusi
 const distribusiTable = document.querySelector('#distribusi-table');
@@ -12,11 +12,10 @@ const addDistribusiForm = document.querySelector('#form-add-distribusi');
 const updateDistribusiBtns = document.querySelectorAll('.btn-update-distribusi');
 const deleteDistribusiBtns = document.querySelectorAll('.btn-delete-distribusi');
 
-//? DOM Element - Halaman Nasabah Baru
-const nasabahBaruTable = document.querySelector('#nasabah-baru-table');
-const addNasabahBaruForm = document.querySelector('#form-add-nasabah-baru');
-const updateNasabahBaruBtns = document.querySelectorAll('.btn-update-nasabah-baru');
-const deleteNasabahBaruBtns = document.querySelectorAll('.btn-delete-nasabah-baru');
+//? DOM Element - Halaman Review
+const reviewTable = document.querySelector('#review-table');
+const addReviewForm = document.querySelector('#form-add-review');
+const deleteReviewBtns = document.querySelectorAll('.btn-delete-review');
 
 //***************** Halaman Distribusi Kata ********************/
 //? Datatables Distribusi
@@ -86,97 +85,52 @@ if (deleteDistribusiBtns.length > 0) {
   });
 }
 
-//***************** Halaman Nasabah Baru ********************/
-let dataTrain = [];
-let dataTest = [];
-
-//? Datatables Nasabah Baru
-if (nasabahBaruTable) {
+//***************** Halaman Review ********************/
+//? Datatables Review
+if (reviewTable) {
   const options = {
     perPage: 10,
-    columns: [{ select: 8, sortable: false }],
+    columns: [{ select: 3, sortable: false }],
   };
-  new DataTable(nasabahBaruTable, options);
-
-  //? Get Data Nasabah Lama
-  const nasabahLamaObjArr = JSON.parse(document.querySelector('#title-nasabah-baru').dataset.nasabahLamaObjArr);
-
-  //? Split Dataset Nasabah Lama
-  const splitIndex = Math.floor(nasabahLamaObjArr.length * 0.7);
-  dataTrain = nasabahLamaObjArr.slice(0, splitIndex);
-  dataTest = nasabahLamaObjArr.slice(splitIndex);
+  new DataTable(reviewTable, options);
 }
 
-//? Add Data Nasabah Baru
-if (addNasabahBaruForm) {
-  const addNasabahBaruModal = document.querySelector('#modal-add-nasabah-baru');
-  const bsAddNasabahBaruModal = new bootstrap.Modal(addNasabahBaruModal);
+//? Add Data Review
+if (addReviewForm) {
+  const addReviewModal = document.querySelector('#modal-add-review');
+  const bsAddReviewModal = new bootstrap.Modal(addReviewModal);
 
-  addNasabahBaruForm.addEventListener('submit', (e) => {
+  addReviewForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    addNasabahBaruForm.classList.add('was-validated');
+    addReviewForm.classList.add('was-validated');
 
-    if (addNasabahBaruForm.checkValidity()) {
-      const nasabahBaruObj = {
-        nama: addNasabahBaruForm.querySelector('#add-nama').value,
-        usia: addNasabahBaruForm.querySelector('#add-usia').value,
-        pendapatan: addNasabahBaruForm.querySelector('#add-pendapatan').value / 1000000,
-        utang: addNasabahBaruForm.querySelector('#add-utang').value / 1000000,
-        riwayat_pembayaran: addNasabahBaruForm.querySelector('#add-riwayat_pembayaran').value,
+    if (addReviewForm.checkValidity()) {
+      const reviewObj = {
+        teks_review: addReviewForm.querySelector('#add-teks_review').value,
       };
 
-      //? SVM
-      const { prediksi_potensial, akurasi } = classification(dataTrain, dataTest, nasabahBaruObj);
-      nasabahBaruObj['prediksi_potensial'] = prediksi_potensial;
-      nasabahBaruObj['akurasi'] = akurasi;
+      //? Get Data Distribusi
+      const distribusiObjArr = JSON.parse(document.querySelector('#title-review').dataset.distribusiObjArr);
 
-      addNewData('nasabah-baru', nasabahBaruObj, addNasabahBaruForm, bsAddNasabahBaruModal);
+      //? Naive Bayes
+      reviewObj['sentimen'] = classification(distribusiObjArr, reviewObj.teks_review);
+
+      // console.log('Sentimen result:', reviewObj['sentimen']);
+
+      addNewData('review', reviewObj, addReviewForm, bsAddReviewModal);
     }
   });
 }
 
-//? Update Data Nasabah Baru
-if (updateNasabahBaruBtns.length > 0) {
-  const updateNasabahBaruModalList = document.querySelectorAll('[id^="modal-update-nasabah-baru"]');
-  const bsUpdateNasabahBaruModalList = Array.from(updateNasabahBaruModalList).map((el) => new bootstrap.Modal(el));
-  const updateDataFormList = document.querySelectorAll(`[id^="form-update-nasabah-baru"]`);
+//? Delete Data Review
+if (deleteReviewBtns.length > 0) {
+  const deleteReviewModalList = document.querySelectorAll('[id^="modal-delete-review"]');
+  const bsDeleteReviewModalList = Array.from(deleteReviewModalList).map((el) => new bootstrap.Modal(el));
 
-  updateDataFormList.forEach((form) => {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      form.classList.add('was-validated');
-      const nasabahBaruId = form.dataset.objId;
-
-      if (form.checkValidity()) {
-        const nasabahBaruObj = {
-          nama: form.querySelector('#update-nama').value,
-          usia: form.querySelector('#update-usia').value,
-          pendapatan: form.querySelector('#update-pendapatan').value / 1000000,
-          utang: form.querySelector('#update-utang').value / 1000000,
-          riwayat_pembayaran: form.querySelector('#update-riwayat_pembayaran').value,
-        };
-
-        //? SVM
-        const { prediksi_potensial, akurasi } = classification(dataTrain, dataTest, nasabahBaruObj);
-
-        nasabahBaruObj['prediksi_potensial'] = prediksi_potensial;
-        nasabahBaruObj['akurasi'] = akurasi;
-
-        updateDataById('nasabah-baru', nasabahBaruId, nasabahBaruObj, form, bsUpdateNasabahBaruModalList);
-      }
-    });
-  });
-}
-
-//? Delete Data Nasabah Baru
-if (deleteNasabahBaruBtns.length > 0) {
-  const deleteNasabahBaruModalList = document.querySelectorAll('[id^="modal-delete-nasabah-baru"]');
-  const bsDeleteNasabahBaruModalList = Array.from(deleteNasabahBaruModalList).map((el) => new bootstrap.Modal(el));
-
-  deleteNasabahBaruBtns.forEach((btn) => {
+  deleteReviewBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      const nasabahBaruId = btn.dataset.objId;
-      delDataById('nasabah-baru', nasabahBaruId, bsDeleteNasabahBaruModalList);
+      const reviewId = btn.dataset.objId;
+      delDataById('review', reviewId, bsDeleteReviewModalList);
     });
   });
 }
